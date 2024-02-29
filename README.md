@@ -234,26 +234,17 @@ Here is a non exhaustive list of open-source projects using faster-whisper. Feel
 
 ## Model conversion
 
-<<<<<<< HEAD
-When loading a model from its size such as `WhisperModel("large-v3")`, the correspondig CTranslate2 model is automatically downloaded from the [Hugging Face Hub](https://huggingface.co/guillaumekln).
-=======
 When loading a model from its size such as `WhisperModel("large-v3")`, the corresponding CTranslate2 model is automatically downloaded from the [Hugging Face Hub](https://huggingface.co/Systran).
->>>>>>> master
 
 We also provide a script to convert any Whisper models compatible with the Transformers library. They could be the original OpenAI models or user fine-tuned models.
 
 For example the command below converts the [original "large-v3" Whisper model](https://huggingface.co/openai/whisper-large-v3) and saves the weights in FP16:
 
 ```bash
-pip install transformers[torch]>=4.35.0
+pip install transformers[torch]>=4.23
 
-<<<<<<< HEAD
-ct2-transformers-converter --model openai/whisper-large-v3 --output_dir whisper-large-v3-ct2 \
-    --copy_files tokenizer.json --quantization float16
-=======
 ct2-transformers-converter --model openai/whisper-large-v3 --output_dir whisper-large-v3-ct2
 --copy_files tokenizer.json preprocessor_config.json --quantization float16
->>>>>>> master
 ```
 
 * The option `--model` accepts a model name on the Hub or a path to a model directory.
