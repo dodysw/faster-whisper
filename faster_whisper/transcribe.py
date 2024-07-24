@@ -428,6 +428,8 @@ class BatchedInferencePipeline(Pipeline):
         prepend_punctuations: str = "\"'“¿([{-",
         append_punctuations: str = "\"'.。,，!！?？:：”)]}、",
         max_new_tokens: Optional[int] = None,
+        default_language=None,
+        language_detect_min_prob = None,
         hotwords: Optional[str] = None,
         word_timestamps: bool = False,
         without_timestamps: bool = True,
@@ -574,7 +576,8 @@ class BatchedInferencePipeline(Pipeline):
             all_language_probs,
         ) = self.get_language_and_tokenizer(audio, task, language)
         batch_size = batch_size or self._batch_size
-
+        if default_language is not None and language_detect_min_prob is not None and language_probability < language_detect_min_prob:
+            language = default_language
         duration_after_vad = sum(
             segment["end"] - segment["start"] for segment in vad_segments
         )
