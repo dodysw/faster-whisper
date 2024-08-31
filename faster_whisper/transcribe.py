@@ -671,6 +671,8 @@ class WhisperModel:
             vad_filter: bool = False,
             vad_parameters: Optional[Union[dict, VadOptions]] = None,
             max_new_tokens: Optional[int] = None,
+            default_language=None,
+            language_detect_min_prob=None,
             chunk_length: Optional[int] = None,
             clip_timestamps: Union[str, List[float]] = "0",
             hallucination_silence_threshold: Optional[float] = None,
