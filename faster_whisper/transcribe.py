@@ -250,6 +250,7 @@ class BatchedInferencePipeline:
             clip_timestamps: Optional[List[dict]] = None,
             batch_size: int = 16,
             hotwords: Optional[str] = None,
+            log_prefix: Optional[str] = '',
     ) -> Tuple[Iterable[Segment], TranscriptionInfo]:
         """transcribe audio in chunks in batched fashion and return with language info.
 
@@ -679,6 +680,7 @@ class WhisperModel:
             hotwords: Optional[str] = None,
             language_detection_threshold: Optional[float] = None,
             language_detection_segments: int = 1,
+            log_prefix: Optional[str] = '',
     ) -> Tuple[Iterable[Segment], TranscriptionInfo]:
         """Transcribes an input file.
 
@@ -773,7 +775,7 @@ class WhisperModel:
         duration_after_vad = duration
 
         self.logger.info(
-            "Processing audio with duration %s", format_timestamp(duration)
+            "%sProcessing audio with duration %s", log_prefix, format_timestamp(duration)
         )
 
         if vad_filter and clip_timestamps == "0":
@@ -787,13 +789,13 @@ class WhisperModel:
             duration_after_vad = audio.shape[0] / sampling_rate
 
             self.logger.info(
-                "VAD filter removed %s of audio",
+                "%sVAD filter removed %s of audio", log_prefix,
                 format_timestamp(duration - duration_after_vad),
             )
 
             if self.logger.isEnabledFor(logging.DEBUG):
                 self.logger.debug(
-                    "VAD filter kept the following audio segments: %s",
+                    "%sVAD filter kept the following audio segments: %s", log_prefix,
                     ", ".join(
                         "[%s -> %s]"
                         % (
@@ -891,7 +893,7 @@ class WhisperModel:
                         language_probability = 0
 
                 self.logger.info(
-                    "Detected language '%s' with probability %.2f",
+                    "%sDetected language '%s' with probability %.2f", log_prefix,
                     language,
                     language_probability,
                 )
@@ -951,7 +953,7 @@ class WhisperModel:
             hotwords=hotwords,
         )
 
-        segments = self.generate_segments(features, tokenizer, options, encoder_output)
+        segments = self.generate_segments(features, tokenizer, options, encoder_output, log_prefix=log_prefix)
 
         if speech_chunks:
             segments = restore_speech_timestamps(segments, speech_chunks, sampling_rate)
@@ -1052,6 +1054,7 @@ class WhisperModel:
             tokenizer: Tokenizer,
             options: TranscriptionOptions,
             encoder_output: Optional[ctranslate2.StorageView] = None,
+            log_prefix = '',
     ) -> Iterable[Segment]:
         content_frames = features.shape[-1] - self.feature_extractor.nb_max_frames
         content_duration = float(content_frames * self.feature_extractor.time_per_frame)
@@ -1126,7 +1129,7 @@ class WhisperModel:
 
             if self.logger.isEnabledFor(logging.DEBUG):
                 self.logger.debug(
-                    "Processing segment at %s", format_timestamp(time_offset)
+                    "%sProcessing segment at %s", log_prefix, format_timestamp(time_offset)
                 )
 
             previous_tokens = all_tokens[prompt_reset_since:]
@@ -1183,7 +1186,7 @@ class WhisperModel:
 
                 if should_skip:
                     self.logger.debug(
-                        "No speech threshold is met (%f > %f)",
+                        "%sNo speech threshold is met (%f > %f)", log_prefix,
                         result.no_speech_prob,
                         options.no_speech_threshold,
                     )
@@ -1194,7 +1197,7 @@ class WhisperModel:
                     if avg_logprob < options.log_prob_low_threshold:
                         should_skip = True
                         self.logger.debug(
-                            "log prob low threshold is met (%f > %f)",
+                            "%slog prob low threshold is met (%f > %f)", log_prefix,
                             avg_logprob,
                             options.log_prob_low_threshold,
                         )
@@ -1345,7 +1348,7 @@ class WhisperModel:
             ):
                 if options.condition_on_previous_text:
                     self.logger.debug(
-                        "Reset prompt. prompt_reset_on_temperature threshold is met %f > %f",
+                        "%sReset prompt. prompt_reset_on_temperature threshold is met %f > %f", log_prefix,
                         temperature,
                         options.prompt_reset_on_temperature,
                     )
