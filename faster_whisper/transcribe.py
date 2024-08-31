@@ -23,7 +23,6 @@ from faster_whisper.tokenizer import _LANGUAGE_CODES, Tokenizer
 from faster_whisper.utils import (
     download_model,
     format_timestamp,
-    get_assets_path,
     get_end,
     get_logger,
 )
@@ -112,11 +111,11 @@ class BatchedInferencePipeline:
     """
 
     def __init__(
-        self,
-        model,
-        options: Optional[NamedTuple] = None,
-        tokenizer=None,
-        language: Optional[str] = None,
+            self,
+            model,
+            options: Optional[NamedTuple] = None,
+            tokenizer=None,
+            language: Optional[str] = None,
     ):
         self.model: WhisperModel = model
         self.tokenizer = tokenizer
@@ -177,7 +176,7 @@ class BatchedInferencePipeline:
         return segmented_outputs
 
     def get_language_and_tokenizer(
-        self, audio, task: Optional[str] = None, language: Optional[str] = None
+            self, audio, task: Optional[str] = None, language: Optional[str] = None
     ):
         all_language_probs = None
         language_probability = 1.0
@@ -211,46 +210,46 @@ class BatchedInferencePipeline:
         return language, language_probability, task, all_language_probs
 
     def transcribe(
-        self,
-        audio: Union[str, BinaryIO, torch.Tensor, np.ndarray],
-        language: Optional[str] = None,
-        task: str = None,
-        log_progress: bool = False,
-        beam_size: int = 5,
-        best_of: int = 5,
-        patience: float = 1,
-        length_penalty: float = 1,
-        repetition_penalty: float = 1,
-        no_repeat_ngram_size: int = 0,
-        temperature: Union[float, List[float], Tuple[float, ...]] = [
-            0.0,
-            0.2,
-            0.4,
-            0.6,
-            0.8,
-            1.0,
-        ],
-        compression_ratio_threshold: Optional[float] = 2.4,
-        log_prob_threshold: Optional[float] = -1.0,
-        log_prob_low_threshold: Optional[float] = None,
-        no_speech_threshold: Optional[float] = 0.6,
-        initial_prompt: Optional[Union[str, Iterable[int]]] = None,
-        prefix: Optional[str] = None,
-        suppress_blank: bool = True,
-        suppress_tokens: Optional[List[int]] = [-1],
-        word_timestamps: bool = False,
-        without_timestamps: bool = True,
-        prepend_punctuations: str = "\"'“¿([{-",
-        append_punctuations: str = "\"'.。,，!！?？:：”)]}、",
-        vad_filter: bool = True,
-        vad_parameters: Optional[Union[dict, VadOptions]] = None,
-        max_new_tokens: Optional[int] = None,
-        default_language=None,
-        language_detect_min_prob = None,
-        chunk_length: Optional[int] = None,
-        clip_timestamps: Optional[List[dict]] = None,
-        batch_size: int = 16,
-        hotwords: Optional[str] = None,
+            self,
+            audio: Union[str, BinaryIO, torch.Tensor, np.ndarray],
+            language: Optional[str] = None,
+            task: str = None,
+            log_progress: bool = False,
+            beam_size: int = 5,
+            best_of: int = 5,
+            patience: float = 1,
+            length_penalty: float = 1,
+            repetition_penalty: float = 1,
+            no_repeat_ngram_size: int = 0,
+            temperature: Union[float, List[float], Tuple[float, ...]] = [
+                0.0,
+                0.2,
+                0.4,
+                0.6,
+                0.8,
+                1.0,
+            ],
+            compression_ratio_threshold: Optional[float] = 2.4,
+            log_prob_threshold: Optional[float] = -1.0,
+            log_prob_low_threshold: Optional[float] = None,
+            no_speech_threshold: Optional[float] = 0.6,
+            initial_prompt: Optional[Union[str, Iterable[int]]] = None,
+            prefix: Optional[str] = None,
+            suppress_blank: bool = True,
+            suppress_tokens: Optional[List[int]] = [-1],
+            word_timestamps: bool = False,
+            without_timestamps: bool = True,
+            prepend_punctuations: str = "\"'“¿([{-",
+            append_punctuations: str = "\"'.。,，!！?？:：”)]}、",
+            vad_filter: bool = True,
+            vad_parameters: Optional[Union[dict, VadOptions]] = None,
+            max_new_tokens: Optional[int] = None,
+            default_language=None,
+            language_detect_min_prob=None,
+            chunk_length: Optional[int] = None,
+            clip_timestamps: Optional[List[dict]] = None,
+            batch_size: int = 16,
+            hotwords: Optional[str] = None,
     ) -> Tuple[Iterable[Segment], TranscriptionInfo]:
         """transcribe audio in chunks in batched fashion and return with language info.
 
@@ -395,8 +394,8 @@ class BatchedInferencePipeline:
         if default_language is not None and language_detect_min_prob is not None and language_probability < language_detect_min_prob:
             language = default_language
         duration_after_vad = (
-            sum((segment["end"] - segment["start"]) for segment in clip_timestamps)
-            / sampling_rate
+                sum((segment["end"] - segment["start"]) for segment in clip_timestamps)
+                / sampling_rate
         )
 
         # batched options: see the difference with default options in WhisperModel
@@ -445,13 +444,13 @@ class BatchedInferencePipeline:
 
         audio_chunks, chunks_metadata = collect_chunks(audio, clip_timestamps)
         to_cpu = (
-            self.model.model.device == "cuda" and len(self.model.model.device_index) > 1
+                self.model.model.device == "cuda" and len(self.model.model.device_index) > 1
         )
         features = (
             torch.stack(
                 [
                     self.model.feature_extractor(chunk, to_cpu=to_cpu)[
-                        ..., : self.model.feature_extractor.nb_max_frames
+                    ..., : self.model.feature_extractor.nb_max_frames
                     ]
                     for chunk in audio_chunks
                 ]
@@ -471,14 +470,14 @@ class BatchedInferencePipeline:
         return segments, info
 
     def _batched_segments_generator(
-        self, features, chunks_metadata, batch_size, options, log_progress
+            self, features, chunks_metadata, batch_size, options, log_progress
     ):
         pbar = tqdm(total=len(features), disable=not log_progress, position=0)
         seg_idx = 0
         for i in range(0, len(features), batch_size):
             results = self.forward(
-                features[i : i + batch_size],
-                chunks_metadata[i : i + batch_size],
+                features[i: i + batch_size],
+                chunks_metadata[i: i + batch_size],
                 **options._asdict(),
             )
 
@@ -513,17 +512,17 @@ class BatchedInferencePipeline:
 
 class WhisperModel:
     def __init__(
-        self,
-        model_size_or_path: str,
-        device: str = "auto",
-        device_index: Union[int, List[int]] = 0,
-        compute_type: str = "default",
-        cpu_threads: int = 16,
-        num_workers: int = 1,
-        download_root: Optional[str] = None,
-        local_files_only: bool = False,
-        files: dict = None,
-        **model_kwargs,
+            self,
+            model_size_or_path: str,
+            device: str = "auto",
+            device_index: Union[int, List[int]] = 0,
+            compute_type: str = "default",
+            cpu_threads: int = 16,
+            num_workers: int = 1,
+            download_root: Optional[str] = None,
+            local_files_only: bool = False,
+            files: dict = None,
+            **model_kwargs,
     ):
         """Initializes the Whisper model.
 
@@ -599,13 +598,13 @@ class WhisperModel:
         )
         self.input_stride = 2
         self.num_samples_per_token = (
-            self.feature_extractor.hop_length * self.input_stride
+                self.feature_extractor.hop_length * self.input_stride
         )
         self.frames_per_second = (
-            self.feature_extractor.sampling_rate // self.feature_extractor.hop_length
+                self.feature_extractor.sampling_rate // self.feature_extractor.hop_length
         )
         self.tokens_per_second = (
-            self.feature_extractor.sampling_rate // self.num_samples_per_token
+                self.feature_extractor.sampling_rate // self.num_samples_per_token
         )
         self.time_precision = 0.02
         self.max_length = 448
@@ -634,50 +633,50 @@ class WhisperModel:
         return config
 
     def transcribe(
-        self,
-        audio: Union[str, BinaryIO, torch.Tensor, np.ndarray],
-        language: Optional[str] = None,
-        task: str = "transcribe",
-        beam_size: int = 5,
-        best_of: int = 5,
-        patience: float = 1,
-        length_penalty: float = 1,
-        repetition_penalty: float = 1,
-        no_repeat_ngram_size: int = 0,
-        temperature: Union[float, List[float], Tuple[float, ...]] = [
-            0.0,
-            0.2,
-            0.4,
-            0.6,
-            0.8,
-            1.0,
-        ],
-        compression_ratio_threshold: Optional[float] = 2.4,
-        log_prob_threshold: Optional[float] = -1.0,
-        log_prob_low_threshold: Optional[float] = None,
-        no_speech_threshold: Optional[float] = 0.6,
-        condition_on_previous_text: bool = True,
-        prompt_reset_on_temperature: float = 0.5,
-        initial_prompt: Optional[Union[str, Iterable[int]]] = None,
-        prefix: Optional[str] = None,
-        suppress_blank: bool = True,
-        suppress_tokens: Optional[List[int]] = [-1],
-        without_timestamps: bool = False,
-        max_initial_timestamp: float = 1.0,
-        word_timestamps: bool = False,
-        prepend_punctuations: str = "\"'“¿([{-",
-        append_punctuations: str = "\"'.。,，!！?？:：”)]}、",
-        multilingual: bool = False,
-        output_language: Optional[str] = None,
-        vad_filter: bool = False,
-        vad_parameters: Optional[Union[dict, VadOptions]] = None,
-        max_new_tokens: Optional[int] = None,
-        chunk_length: Optional[int] = None,
-        clip_timestamps: Union[str, List[float]] = "0",
-        hallucination_silence_threshold: Optional[float] = None,
-        hotwords: Optional[str] = None,
-        language_detection_threshold: Optional[float] = None,
-        language_detection_segments: int = 1,
+            self,
+            audio: Union[str, BinaryIO, torch.Tensor, np.ndarray],
+            language: Optional[str] = None,
+            task: str = "transcribe",
+            beam_size: int = 5,
+            best_of: int = 5,
+            patience: float = 1,
+            length_penalty: float = 1,
+            repetition_penalty: float = 1,
+            no_repeat_ngram_size: int = 0,
+            temperature: Union[float, List[float], Tuple[float, ...]] = [
+                0.0,
+                0.2,
+                0.4,
+                0.6,
+                0.8,
+                1.0,
+            ],
+            compression_ratio_threshold: Optional[float] = 2.4,
+            log_prob_threshold: Optional[float] = -1.0,
+            log_prob_low_threshold: Optional[float] = None,
+            no_speech_threshold: Optional[float] = 0.6,
+            condition_on_previous_text: bool = True,
+            prompt_reset_on_temperature: float = 0.5,
+            initial_prompt: Optional[Union[str, Iterable[int]]] = None,
+            prefix: Optional[str] = None,
+            suppress_blank: bool = True,
+            suppress_tokens: Optional[List[int]] = [-1],
+            without_timestamps: bool = False,
+            max_initial_timestamp: float = 1.0,
+            word_timestamps: bool = False,
+            prepend_punctuations: str = "\"'“¿([{-",
+            append_punctuations: str = "\"'.。,，!！?？:：”)]}、",
+            multilingual: bool = False,
+            output_language: Optional[str] = None,
+            vad_filter: bool = False,
+            vad_parameters: Optional[Union[dict, VadOptions]] = None,
+            max_new_tokens: Optional[int] = None,
+            chunk_length: Optional[int] = None,
+            clip_timestamps: Union[str, List[float]] = "0",
+            hallucination_silence_threshold: Optional[float] = None,
+            hotwords: Optional[str] = None,
+            language_detection_threshold: Optional[float] = None,
+            language_detection_segments: int = 1,
     ) -> Tuple[Iterable[Segment], TranscriptionInfo]:
         """Transcribes an input file.
 
@@ -828,8 +827,8 @@ class WhisperModel:
                 language_probability = 1
             else:
                 if (
-                    language_detection_segments is None
-                    or language_detection_segments < 1
+                        language_detection_segments is None
+                        or language_detection_segments < 1
                 ):
                     language_detection_segments = 1
                 start_timestamp = (
@@ -838,7 +837,7 @@ class WhisperModel:
                     else clip_timestamps[0]
                 )
                 content_frames = (
-                    features.shape[-1] - self.feature_extractor.nb_max_frames
+                        features.shape[-1] - self.feature_extractor.nb_max_frames
                 )
                 seek = (
                     int(start_timestamp * self.frames_per_second)
@@ -854,8 +853,8 @@ class WhisperModel:
                 detected_language_info = {}
                 while seek <= end_frames:
                     segment = features[
-                        :, seek : seek + self.feature_extractor.nb_max_frames
-                    ]
+                              :, seek: seek + self.feature_extractor.nb_max_frames
+                              ]
                     encoder_output = self.encode(segment)
                     # results is a list of tuple[str, float] with language names and
                     # probabilities.
@@ -867,8 +866,8 @@ class WhisperModel:
                     # Get top language token and probability
                     language, language_probability = all_language_probs[0]
                     if (
-                        language_detection_threshold is None
-                        or language_probability > language_detection_threshold
+                            language_detection_threshold is None
+                            or language_probability > language_detection_threshold
                     ):
                         break
                     detected_language_info.setdefault(language, []).append(
@@ -967,25 +966,25 @@ class WhisperModel:
         return segments, info
 
     def _split_segments_by_timestamps(
-        self,
-        tokenizer: Tokenizer,
-        tokens: List[int],
-        time_offset: float,
-        segment_size: int,
-        segment_duration: float,
-        seek: int,
+            self,
+            tokenizer: Tokenizer,
+            tokens: List[int],
+            time_offset: float,
+            segment_size: int,
+            segment_duration: float,
+            seek: int,
     ) -> List[List[int]]:
         current_segments = []
         single_timestamp_ending = (
-            len(tokens) >= 2 and tokens[-2] < tokenizer.timestamp_begin <= tokens[-1]
+                len(tokens) >= 2 and tokens[-2] < tokenizer.timestamp_begin <= tokens[-1]
         )
 
         consecutive_timestamps = [
             i
             for i in range(len(tokens))
             if i > 0
-            and tokens[i] >= tokenizer.timestamp_begin
-            and tokens[i - 1] >= tokenizer.timestamp_begin
+               and tokens[i] >= tokenizer.timestamp_begin
+               and tokens[i - 1] >= tokenizer.timestamp_begin
         ]
 
         if len(consecutive_timestamps) > 0:
@@ -999,7 +998,7 @@ class WhisperModel:
                 start_timestamp_position = sliced_tokens[0] - tokenizer.timestamp_begin
                 end_timestamp_position = sliced_tokens[-1] - tokenizer.timestamp_begin
                 start_time = (
-                    time_offset + start_timestamp_position * self.time_precision
+                        time_offset + start_timestamp_position * self.time_precision
                 )
                 end_time = time_offset + end_timestamp_position * self.time_precision
 
@@ -1019,7 +1018,7 @@ class WhisperModel:
             else:
                 # otherwise, ignore the unfinished segment and seek to the last timestamp
                 last_timestamp_position = (
-                    tokens[last_slice - 1] - tokenizer.timestamp_begin
+                        tokens[last_slice - 1] - tokenizer.timestamp_begin
                 )
                 seek += last_timestamp_position * self.input_stride
 
@@ -1046,11 +1045,11 @@ class WhisperModel:
         return current_segments, seek, single_timestamp_ending
 
     def generate_segments(
-        self,
-        features: torch.Tensor,
-        tokenizer: Tokenizer,
-        options: TranscriptionOptions,
-        encoder_output: Optional[ctranslate2.StorageView] = None,
+            self,
+            features: torch.Tensor,
+            tokenizer: Tokenizer,
+            options: TranscriptionOptions,
+            encoder_output: Optional[ctranslate2.StorageView] = None,
     ) -> Iterable[Segment]:
         content_frames = features.shape[-1] - self.feature_extractor.nb_max_frames
         content_duration = float(content_frames * self.feature_extractor.time_per_frame)
@@ -1119,7 +1118,7 @@ class WhisperModel:
                 content_frames - seek,
                 seek_clip_end - seek,
             )
-            segment = features[:, seek : seek + segment_size]
+            segment = features[:, seek: seek + segment_size]
             segment_duration = segment_size * self.feature_extractor.time_per_frame
             segment = pad_or_trim(segment, self.feature_extractor.nb_max_frames)
 
@@ -1174,8 +1173,8 @@ class WhisperModel:
                 should_skip = result.no_speech_prob > options.no_speech_threshold
 
                 if (
-                    options.log_prob_threshold is not None
-                    and avg_logprob > options.log_prob_threshold
+                        options.log_prob_threshold is not None
+                        and avg_logprob > options.log_prob_threshold
                 ):
                     # don't skip if the logprob is high enough, despite the no_speech_prob
                     should_skip = False
@@ -1280,21 +1279,21 @@ class WhisperModel:
                             continue
                         if is_segment_anomaly(segment):
                             next_segment = next_words_segment(
-                                current_segments[si + 1 :]
+                                current_segments[si + 1:]
                             )
                             if next_segment is not None:
                                 hal_next_start = next_segment["words"][0]["start"]
                             else:
                                 hal_next_start = time_offset + segment_duration
                             silence_before = (
-                                segment["start"] - hal_last_end > threshold
-                                or segment["start"] < threshold
-                                or segment["start"] - time_offset < 2.0
+                                    segment["start"] - hal_last_end > threshold
+                                    or segment["start"] < threshold
+                                    or segment["start"] - time_offset < 2.0
                             )
                             silence_after = (
-                                hal_next_start - segment["end"] > threshold
-                                or is_segment_anomaly(next_segment)
-                                or window_end_time - segment["end"] < 2.0
+                                    hal_next_start - segment["end"] > threshold
+                                    or is_segment_anomaly(next_segment)
+                                    or window_end_time - segment["end"] < 2.0
                             )
                             if silence_before and silence_after:
                                 seek = round(
@@ -1339,8 +1338,8 @@ class WhisperModel:
                 )
 
             if (
-                not options.condition_on_previous_text
-                or temperature > options.prompt_reset_on_temperature
+                    not options.condition_on_previous_text
+                    or temperature > options.prompt_reset_on_temperature
             ):
                 if options.condition_on_previous_text:
                     self.logger.debug(
@@ -1363,11 +1362,11 @@ class WhisperModel:
         return self.model.encode(features, to_cpu=to_cpu)
 
     def generate_with_fallback(
-        self,
-        encoder_output: ctranslate2.StorageView,
-        prompt: List[int],
-        tokenizer: Tokenizer,
-        options: TranscriptionOptions,
+            self,
+            encoder_output: ctranslate2.StorageView,
+            prompt: List[int],
+            tokenizer: Tokenizer,
+            options: TranscriptionOptions,
     ) -> Tuple[ctranslate2.models.WhisperGenerationResult, float, float, float]:
         decode_result = None
         all_results = []
@@ -1425,7 +1424,7 @@ class WhisperModel:
 
             # Recover the average log prob from the returned score.
             seq_len = len(tokens)
-            cum_logprob = result.scores[0] * (seq_len**options.length_penalty)
+            cum_logprob = result.scores[0] * (seq_len ** options.length_penalty)
             avg_logprob = cum_logprob / (seq_len + 1)
 
             text = tokenizer.decode(tokens).strip()
@@ -1455,8 +1454,8 @@ class WhisperModel:
                     below_cr_threshold_results.append(decode_result)
 
             if (
-                options.log_prob_threshold is not None
-                and avg_logprob < options.log_prob_threshold
+                    options.log_prob_threshold is not None
+                    and avg_logprob < options.log_prob_threshold
             ):
                 needs_fallback = True  # average log probability is too low
 
@@ -1468,10 +1467,10 @@ class WhisperModel:
                 )
 
             if (
-                options.no_speech_threshold is not None
-                and result.no_speech_prob > options.no_speech_threshold
-                and options.log_prob_threshold is not None
-                and avg_logprob < options.log_prob_threshold
+                    options.no_speech_threshold is not None
+                    and result.no_speech_prob > options.no_speech_threshold
+                    and options.log_prob_threshold is not None
+                    and avg_logprob < options.log_prob_threshold
             ):
                 needs_fallback = False  # silence
 
@@ -1493,12 +1492,12 @@ class WhisperModel:
         return decode_result
 
     def get_prompt(
-        self,
-        tokenizer: Tokenizer,
-        previous_tokens: List[int],
-        without_timestamps: bool = False,
-        prefix: Optional[str] = None,
-        hotwords: Optional[str] = None,
+            self,
+            tokenizer: Tokenizer,
+            previous_tokens: List[int],
+            without_timestamps: bool = False,
+            prefix: Optional[str] = None,
+            hotwords: Optional[str] = None,
     ) -> List[int]:
         prompt = []
 
@@ -1510,7 +1509,7 @@ class WhisperModel:
                     hotwords_tokens = hotwords_tokens[: self.max_length // 2 - 1]
                 prompt.extend(hotwords_tokens)
             if previous_tokens:
-                prompt.extend(previous_tokens[-(self.max_length // 2 - 1) :])
+                prompt.extend(previous_tokens[-(self.max_length // 2 - 1):])
 
         prompt.extend(tokenizer.sot_sequence)
 
@@ -1528,14 +1527,14 @@ class WhisperModel:
         return prompt
 
     def add_word_timestamps(
-        self,
-        segments: List[dict],
-        tokenizer: Tokenizer,
-        encoder_output: ctranslate2.StorageView,
-        num_frames: int,
-        prepend_punctuations: str,
-        append_punctuations: str,
-        last_speech_timestamp: float,
+            self,
+            segments: List[dict],
+            tokenizer: Tokenizer,
+            encoder_output: ctranslate2.StorageView,
+            num_frames: int,
+            prepend_punctuations: str,
+            append_punctuations: str,
+            last_speech_timestamp: float,
     ) -> float:
         if len(segments) == 0:
             return
@@ -1590,7 +1589,7 @@ class WhisperModel:
                 words = []
 
                 while word_index < len(alignments[segment_idx]) and saved_tokens < len(
-                    text_tokens_per_segment[segment_idx][subsegment_idx]
+                        text_tokens_per_segment[segment_idx][subsegment_idx]
                 ):
                     timing = alignments[segment_idx][word_index]
 
@@ -1615,15 +1614,15 @@ class WhisperModel:
                     if words[0][
                         "end"
                     ] - last_speech_timestamp > median_duration * 4 and (
-                        words[0]["end"] - words[0]["start"] > max_duration
-                        or (
-                            len(words) > 1
-                            and words[1]["end"] - words[0]["start"] > max_duration * 2
-                        )
+                            words[0]["end"] - words[0]["start"] > max_duration
+                            or (
+                                    len(words) > 1
+                                    and words[1]["end"] - words[0]["start"] > max_duration * 2
+                            )
                     ):
                         if (
-                            len(words) > 1
-                            and words[1]["end"] - words[1]["start"] > max_duration
+                                len(words) > 1
+                                and words[1]["end"] - words[1]["start"] > max_duration
                         ):
                             boundary = max(
                                 words[1]["end"] / 2, words[1]["end"] - max_duration
@@ -1633,8 +1632,8 @@ class WhisperModel:
 
                     # prefer the segment-level start timestamp if the first word is too long.
                     if (
-                        subsegment["start"] < words[0]["end"]
-                        and subsegment["start"] - 0.5 > words[0]["start"]
+                            subsegment["start"] < words[0]["end"]
+                            and subsegment["start"] - 0.5 > words[0]["start"]
                     ):
                         words[0]["start"] = max(
                             0,
@@ -1645,8 +1644,8 @@ class WhisperModel:
 
                     # prefer the segment-level end timestamp if the last word is too long.
                     if (
-                        subsegment["end"] > words[-1]["start"]
-                        and subsegment["end"] + 0.5 < words[-1]["end"]
+                            subsegment["end"] > words[-1]["start"]
+                            and subsegment["end"] + 0.5 < words[-1]["end"]
                     ):
                         words[-1]["end"] = max(
                             words[-1]["start"] + median_duration, subsegment["end"]
@@ -1659,12 +1658,12 @@ class WhisperModel:
         return last_speech_timestamp
 
     def find_alignment(
-        self,
-        tokenizer: Tokenizer,
-        text_tokens: List[int],
-        encoder_output: ctranslate2.StorageView,
-        num_frames: int,
-        median_filter_width: int = 7,
+            self,
+            tokenizer: Tokenizer,
+            text_tokens: List[int],
+            encoder_output: ctranslate2.StorageView,
+            num_frames: int,
+            median_filter_width: int = 7,
     ) -> List[dict]:
         if len(text_tokens) == 0:
             return []
@@ -1720,17 +1719,17 @@ class WhisperModel:
                         probability=probability,
                     )
                     for word, tokens, start, end, probability in zip(
-                        words, word_tokens, start_times, end_times, word_probabilities
-                    )
+                    words, word_tokens, start_times, end_times, word_probabilities
+                )
                 ]
             )
         return return_list
 
     def generate_segment_batched(
-        self,
-        features: torch.Tensor,
-        tokenizer: Tokenizer,
-        options: dict,
+            self,
+            features: torch.Tensor,
+            tokenizer: Tokenizer,
+            options: dict,
     ):
         batch_size = features.shape[0]
         all_tokens = []
@@ -1780,8 +1779,8 @@ class WhisperModel:
     def detect_language(self, audio: torch.Tensor):
         to_cpu = self.model.device == "cuda" and len(self.model.device_index) > 1
         segment = self.feature_extractor(audio, padding=True, to_cpu=to_cpu)[
-            :, : self.feature_extractor.nb_max_frames
-        ]
+                  :, : self.feature_extractor.nb_max_frames
+                  ]
         encoder_output = self.encode(segment)
         results = self.model.detect_language(encoder_output)
         language_token, language_probability = results[0][0]
@@ -1793,7 +1792,7 @@ class WhisperModel:
         return language, language_probability, all_language_probs
 
     def detect_language_multi_segment(
-        self, audio: Union[str, BinaryIO, torch.Tensor], params: Optional[dict] = None
+            self, audio: Union[str, BinaryIO, torch.Tensor], params: Optional[dict] = None
     ):
         """
         Detect language based on N highly-confident segments of a language.
@@ -1909,7 +1908,7 @@ class WhisperModel:
         # We need to get sufficient number of confident predictions per language, not in total.
 
         for i in indices:
-            segment_features = features[:, i * nb_max_frames : (i + 1) * nb_max_frames]
+            segment_features = features[:, i * nb_max_frames: (i + 1) * nb_max_frames]
             try:
                 encoder_output = self.encode(segment_features)
                 results = self.model.detect_language(encoder_output)[0]
@@ -1941,8 +1940,8 @@ class WhisperModel:
 
                 # return the language when sufficient number of confident segments is achieved
                 if (
-                    num_confident_segments_per_language[language]
-                    >= num_detection_segments
+                        num_confident_segments_per_language[language]
+                        >= num_detection_segments
                 ):
                     # Considering the average probability of only confident segments
                     mean = sum(confident_language_probabilities[language]) / len(
@@ -1982,8 +1981,8 @@ class WhisperModel:
             dc_offset = audio.mean()
             audio_minus_dc_offset = audio - dc_offset
             is_silent = (
-                torch.all(audio.abs() < 0.01)
-                or torch.sqrt(torch.mean(audio_minus_dc_offset**2)) < 0.01
+                    torch.all(audio.abs() < 0.01)
+                    or torch.sqrt(torch.mean(audio_minus_dc_offset ** 2)) < 0.01
             )
 
             if is_silent:
@@ -1999,9 +1998,9 @@ class WhisperModel:
 
 
 def restore_speech_timestamps(
-    segments: Iterable[Segment],
-    speech_chunks: List[dict],
-    sampling_rate: int,
+        segments: Iterable[Segment],
+        speech_chunks: List[dict],
+        sampling_rate: int,
 ) -> Iterable[Segment]:
     ts_map = SpeechTimestampsMap(speech_chunks, sampling_rate)
 
@@ -2048,8 +2047,8 @@ def get_compression_ratio(text: str) -> float:
 
 
 def get_suppressed_tokens(
-    tokenizer: Tokenizer,
-    suppress_tokens: Tuple[int],
+        tokenizer: Tokenizer,
+        suppress_tokens: Tuple[int],
 ) -> Optional[List[int]]:
     if -1 in suppress_tokens:
         suppress_tokens = [t for t in suppress_tokens if t >= 0]
