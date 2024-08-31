@@ -234,6 +234,8 @@ class WhisperModel:
         vad_filter: bool = False,
         vad_parameters: Optional[Union[dict, VadOptions]] = None,
         max_new_tokens: Optional[int] = None,
+        default_language=None,
+        language_detect_min_prob = None,
         chunk_length: Optional[int] = None,
         clip_timestamps: Union[str, List[float]] = "0",
         hallucination_silence_threshold: Optional[float] = None,
@@ -421,6 +423,9 @@ class WhisperModel:
                         key=lambda lang: len(detected_language_info[lang]),
                     )
                     language_probability = max(detected_language_info[language])
+
+                if default_language is not None and language_detect_min_prob is not None and language_probability < language_detect_min_prob:
+                    language = default_language
 
                 self.logger.info(
                     "Detected language '%s' with probability %.2f",
